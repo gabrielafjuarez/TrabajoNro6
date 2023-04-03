@@ -76,7 +76,8 @@ void NuevoTickReloj(reloj_t reloj){
              }
          }
         if (activar && reloj->activada){
-             reloj->manejo_evento(reloj, true);
+             //reloj->manejo_evento(reloj, true);
+             reloj-> manejo_evento;
         }
     }
 }

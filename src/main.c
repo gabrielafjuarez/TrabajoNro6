@@ -148,7 +148,7 @@ int main(void) {
     while (true) {
         if (ActivaEntradaDigital(board->aceptar)){
             if (modo == MOSTRANDO_HORA){
-                if (!ObtebnerAlarmaReloj(reloj, entrada, sizeof(entrada))){
+                if (!ObtenerAlarmaReloj(reloj, entrada, sizeof(entrada))){
                     CambiarAlarmaReloj(reloj);  
                 }
             } else if(modo == AJUSTANDO_MINUTOS_ACTUAL){
@@ -166,7 +166,7 @@ int main(void) {
 
         if (ActivaEntradaDigital(board->cancelar)){
             if (modo == MOSTRANDO_HORA){
-                if (ObtebnerAlarmaReloj(reloj, entrada, sizeof(entrada))){
+                if (ObtenerAlarmaReloj(reloj, entrada, sizeof(entrada))){
                     CambiarAlarmaReloj(reloj);  
                 }
             } else {
@@ -186,7 +186,7 @@ int main(void) {
 
         if (ActivaEntradaDigital(board->establecer_alarma)){    
             CambiarModo(AJUSTANDO_MINUTOS_ALARMA);
-            ObtebnerAlarmaReloj(reloj, entrada, sizeof(entrada));
+            ObtenerAlarmaReloj(reloj, entrada, sizeof(entrada));
             EscribirPantallaBCD(board->display, entrada, sizeof(entrada));
             MostrarCambiosPuntos(board->display, 0, 3);
         }
@@ -242,7 +242,7 @@ void SysTick_Handler(void){
         if (contador > 500){
             MostrarCambiosPuntos(board->display, 1, 1);
         }
-        if (ObtebnerAlarmaReloj(reloj, hora, sizeof(hora))){
+        if (ObtenerAlarmaReloj(reloj, hora, sizeof(hora))){
             MostrarCambiosPuntos(board->display, 3, 3); 
         }
     }
