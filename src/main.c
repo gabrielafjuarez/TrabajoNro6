@@ -137,7 +137,7 @@ void DecrementarBCD(uint8_t numero[2], const uint8_t limite[2]){
 int main(void) { 
     uint8_t entrada[4];
     board = BoardCreate();
-    reloj = CrearReloj(1000, SonarAlarma);
+    reloj = CrearReloj(10, SonarAlarma);
     
     SisTick_Init(1000);
     CambiarModo(HORA_SIN_AJUSTAR);
@@ -175,12 +175,10 @@ int main(void) {
         }
 
         if (ActivaEntradaDigital(board->establecer_alarma)){    
-            if(modo == AJUSTANDO_HORAS_ALARMA){
-                CambiarModo(AJUSTANDO_HORAS_ALARMA);
-            } else if (modo == AJUSTANDO_HORAS_ALARMA){
-                ConfigurarAlarmaReloj(reloj, entrada, sizeof(entrada));
-                CambiarModo(MOSTRANDO_HORA);
-            }
+            CambiarModo(AJUSTANDO_MINUTOS_ALARMA);
+            ConfigurarAlarmaReloj(reloj, entrada, sizeof(entrada));
+            EscribirPantallaBCD(board->display, entrada, sizeof(entrada));
+            MostrarCambiosPuntos(board->display, 0, 3);
         }
 
         if (ActivaEntradaDigital(board->decrementar)){
@@ -203,8 +201,8 @@ int main(void) {
             }       
         }
 
-        for (int index = 0; index < 100; index++) {
-            for (int delay = 0; delay < 2500; delay++) {
+        for (int index = 0; index < 20; index++) {
+            for (int delay = 0; delay < 25000; delay++) {
                 __asm("NOP");
             }
         }
@@ -223,7 +221,7 @@ void SysTick_Handler(void){
         TraerHoraReloj(reloj, hora, sizeof(hora));
         EscribirPantallaBCD(board->display, hora, sizeof(hora));
         if (contador > 500){
-            MostrarCambiosPuntos(board ->display, 1, 1);
+         MostrarCambiosPuntos(board -> display, 1, 1);
         }
     }
 }
