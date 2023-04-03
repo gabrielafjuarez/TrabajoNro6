@@ -42,7 +42,8 @@
 #include "bsp.h"
 #include <stdbool.h>
 #include "pantalla.h"
-#include <stddef.h>
+#include "poncho.h"
+#include "chip.h"
 #include "reloj.h"
 
 /* === Macros definitions ====================================================================== */
@@ -107,7 +108,11 @@ void CambiarModo(modo_t valor){
 }
 
 void SonarAlarma(reloj_t reloj){
+    uint8_t hora[4];
 
+    if (ObtenerAlarmaReloj(reloj, hora, sizeof(hora))){
+      ActivarSalidaDigital( board->zumbador);
+    }
 }
 
 void IncrementarBCD(uint8_t numero [2], const uint8_t limite[2]){
