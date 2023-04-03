@@ -127,8 +127,8 @@ void DecrementarBCD(uint8_t numero[2], const uint8_t limite[2]){
         numero[0]--;
     }
     if ((numero[0] > limite[0]) && (numero[1] > limite[1])){
-        numero[0] = 0;
         numero[1] = 0;
+        numero[0] = 0;
     }
 }
 
@@ -148,13 +148,24 @@ int main(void) {
         //genero interrupcion cada X segundos y evito refrescar la pantalla aqui
 
         if (ActivaEntradaDigital(board->aceptar)){
-            EscribirPantallaBCD(board->display, (uint8_t[]){1, 2, 3, 4}, 4);
-            MostrarCambiosPuntos(board->display, 1, 2);
+            // EscribirPantallaBCD(board->display, (uint8_t[]){1, 2, 3, 4}, 4);
+            // MostrarCambiosPuntos(board->display, 1, 2);
+            if(modo == AJUSTANDO_MINUTOS_ACTUAL){
+                CambiarModo(AJUSTANDO_HORAS_ACTUAL);
+            } else if (modo == AJUSTANDO_HORAS_ACTUAL){
+                ConfigurarReloj(reloj, entrada, sizeof(entrada));
+                CambiarModo(MOSTRANDO_HORA);
+            }
         }
 
         if (ActivaEntradaDigital(board->cancelar)){
             //EscribirPantallaBCD(board->display, NULL, 0);
-            CambiarModo(AJUSTANDO_MINUTOS_ACTUAL);
+            //TraerHoraReloj(reloj, entrada, sizeof(entrada));consulto la hora
+            if (TraerHoraReloj(reloj, entrada, sizeof(entrada))){
+                CambiarModo(MOSTRANDO_HORA);
+            } else {
+                CambiarModo(HORA_SIN_AJUSTAR);
+            };
         }
 
         if (ActivaEntradaDigital(board->establecer_tiempo)){
@@ -164,6 +175,12 @@ int main(void) {
         }
 
         if (ActivaEntradaDigital(board->establecer_alarma)){    
+            if(modo == AJUSTANDO_HORAS_ALARMA){
+                CambiarModo(AJUSTANDO_HORAS_ALARMA);
+            } else if (modo == AJUSTANDO_HORAS_ALARMA){
+                ConfigurarAlarmaReloj(reloj, entrada, sizeof(entrada));
+                CambiarModo(MOSTRANDO_HORA);
+            }
         }
 
         if (ActivaEntradaDigital(board->decrementar)){
@@ -195,14 +212,19 @@ int main(void) {
 }
 
 void SysTick_Handler(void){
+    static uint16_t contador =0;
     uint8_t hora[4];
 
     RefrescarPantalla(board->display);
     NuevoTickReloj(reloj);
 
+    contador = (contador +1) % 1000;
     if (modo<= MOSTRANDO_HORA){
-    TraerHoraReloj(reloj, hora, sizeof(hora));
-    EscribirPantallaBCD(board->display, hora, sizeof(hora));
+        TraerHoraReloj(reloj, hora, sizeof(hora));
+        EscribirPantallaBCD(board->display, hora, sizeof(hora));
+        if (contador > 500){
+            MostrarCambiosPuntos(board ->display, 1, 1);
+        }
     }
 }
 /* === End of documentation ==================================================================== */
