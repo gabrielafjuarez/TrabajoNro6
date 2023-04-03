@@ -71,6 +71,7 @@ static board_t board;
 static modo_t modo;
 
 static reloj_t reloj;
+
 static const uint8_t LIMITE_MINUTOS [] = {6, 0};
 static const uint8_t LIMITE_HORAS [] = {2, 4};
 
@@ -104,9 +105,7 @@ void CambiarModo(modo_t valor){
     }
 }
 
-
 void SonarAlarma(reloj_t reloj){
-    //tengo que definir de que manera suena o enciende el led
 }
 
 void IncrementarBCD(uint8_t numero [2], const uint8_t limite[2]){
@@ -138,10 +137,9 @@ void DecrementarBCD(uint8_t numero[2], const uint8_t limite[2]){
 int main(void) { 
     uint8_t entrada[4];
     board = BoardCreate();
+    reloj = CrearReloj(1000, SonarAlarma);
+    
     SisTick_Init(1000);
-    //reloj = CrearReloj(10, SonarAlarma);
-    //uint8_t numero[4] = {1,2,3,4};
-
     CambiarModo(HORA_SIN_AJUSTAR);
 
    
