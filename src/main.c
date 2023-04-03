@@ -73,6 +73,7 @@ static modo_t modo;
 static reloj_t reloj;
 
 static const uint8_t LIMITE_MINUTOS [] = {6, 0};
+
 static const uint8_t LIMITE_HORAS [] = {2, 4};
 
 /* === Private function implementation ========================================================= */
@@ -106,6 +107,7 @@ void CambiarModo(modo_t valor){
 }
 
 void SonarAlarma(reloj_t reloj){
+
 }
 
 void IncrementarBCD(uint8_t numero [2], const uint8_t limite[2]){
@@ -144,28 +146,36 @@ int main(void) {
 
    
     while (true) {
-        //RefrescarPantalla(board->display);
-        //genero interrupcion cada X segundos y evito refrescar la pantalla aqui
-
         if (ActivaEntradaDigital(board->aceptar)){
-            // EscribirPantallaBCD(board->display, (uint8_t[]){1, 2, 3, 4}, 4);
-            // MostrarCambiosPuntos(board->display, 1, 2);
-            if(modo == AJUSTANDO_MINUTOS_ACTUAL){
+            if (modo == MOSTRANDO_HORA){
+                if (!ObtebnerAlarmaReloj(reloj, entrada, sizeof(entrada))){
+                    CambiarAlarmaReloj(reloj);  
+                }
+            } else if(modo == AJUSTANDO_MINUTOS_ACTUAL){
                 CambiarModo(AJUSTANDO_HORAS_ACTUAL);
             } else if (modo == AJUSTANDO_HORAS_ACTUAL){
                 ConfigurarReloj(reloj, entrada, sizeof(entrada));
+                CambiarModo(MOSTRANDO_HORA);
+            } else if (modo == AJUSTANDO_MINUTOS_ALARMA){
+                CambiarModo(AJUSTANDO_HORAS_ALARMA);
+            } else if (modo == AJUSTANDO_HORAS_ALARMA){
+                ConfigurarAlarmaReloj(reloj, entrada, sizeof(entrada));
                 CambiarModo(MOSTRANDO_HORA);
             }
         }
 
         if (ActivaEntradaDigital(board->cancelar)){
-            //EscribirPantallaBCD(board->display, NULL, 0);
-            //TraerHoraReloj(reloj, entrada, sizeof(entrada));consulto la hora
-            if (TraerHoraReloj(reloj, entrada, sizeof(entrada))){
-                CambiarModo(MOSTRANDO_HORA);
+            if (modo == MOSTRANDO_HORA){
+                if (ObtebnerAlarmaReloj(reloj, entrada, sizeof(entrada))){
+                    CambiarAlarmaReloj(reloj);  
+                }
             } else {
-                CambiarModo(HORA_SIN_AJUSTAR);
-            };
+                if (TraerHoraReloj(reloj, entrada, sizeof(entrada))){
+                    CambiarModo(MOSTRANDO_HORA);
+                } else {
+                    CambiarModo(HORA_SIN_AJUSTAR);
+                };
+            }
         }
 
         if (ActivaEntradaDigital(board->establecer_tiempo)){
@@ -176,7 +186,7 @@ int main(void) {
 
         if (ActivaEntradaDigital(board->establecer_alarma)){    
             CambiarModo(AJUSTANDO_MINUTOS_ALARMA);
-            ConfigurarAlarmaReloj(reloj, entrada, sizeof(entrada));
+            ObtebnerAlarmaReloj(reloj, entrada, sizeof(entrada));
             EscribirPantallaBCD(board->display, entrada, sizeof(entrada));
             MostrarCambiosPuntos(board->display, 0, 3);
         }
@@ -184,21 +194,30 @@ int main(void) {
         if (ActivaEntradaDigital(board->decrementar)){
             if((modo == AJUSTANDO_MINUTOS_ACTUAL) || (modo == AJUSTANDO_MINUTOS_ALARMA)){
                 DecrementarBCD(&entrada[2], LIMITE_MINUTOS);//entro con uno que no es el primero
-                EscribirPantallaBCD(board->display, entrada, sizeof(entrada));
+                
             }else if ((modo == AJUSTANDO_HORAS_ACTUAL) || (modo == AJUSTANDO_HORAS_ALARMA)){
-                DecrementarBCD(entrada, LIMITE_HORAS);//entro con el primero
-                EscribirPantallaBCD(board->display, entrada, sizeof(entrada));
+                DecrementarBCD(entrada, LIMITE_MINUTOS);
             }
+            if((modo == AJUSTANDO_MINUTOS_ACTUAL) || (modo == AJUSTANDO_HORAS_ACTUAL)){
+                EscribirPantallaBCD(board->display, entrada, sizeof(entrada));
+            }else if ((modo == AJUSTANDO_HORAS_ACTUAL) || (modo == AJUSTANDO_MINUTOS_ALARMA)){
+                EscribirPantallaBCD(board->display, entrada, sizeof(entrada));
+                MostrarCambiosPuntos(board->display, 0, 3);
+            } 
         }
 
         if (ActivaEntradaDigital(board->incrementar)){   
             if((modo == AJUSTANDO_MINUTOS_ACTUAL) || (modo == AJUSTANDO_MINUTOS_ALARMA)){
                 IncrementarBCD(&entrada[2], LIMITE_MINUTOS);//entro con uno que no es el primero
-                EscribirPantallaBCD(board->display, entrada, sizeof(entrada));
             }else if ((modo == AJUSTANDO_HORAS_ACTUAL) || (modo == AJUSTANDO_HORAS_ALARMA)){
                 IncrementarBCD(entrada, LIMITE_HORAS);//entro con el primero
+            }  
+            if((modo == AJUSTANDO_MINUTOS_ACTUAL) || (modo == AJUSTANDO_HORAS_ALARMA)){
                 EscribirPantallaBCD(board->display, entrada, sizeof(entrada));
-            }       
+            }else if ((modo == AJUSTANDO_HORAS_ACTUAL) || (modo == AJUSTANDO_MINUTOS_ALARMA)){
+                EscribirPantallaBCD(board->display, entrada, sizeof(entrada));
+                MostrarCambiosPuntos(board->display, 0, 3);
+            }     
         }
 
         for (int index = 0; index < 20; index++) {
@@ -210,21 +229,25 @@ int main(void) {
 }
 
 void SysTick_Handler(void){
-    static uint16_t contador =0;
+    static uint16_t contador = 0;
     uint8_t hora[4];
 
     RefrescarPantalla(board->display);
     NuevoTickReloj(reloj);
 
     contador = (contador +1) % 1000;
-    if (modo<= MOSTRANDO_HORA){
+    if (modo <= MOSTRANDO_HORA){
         TraerHoraReloj(reloj, hora, sizeof(hora));
         EscribirPantallaBCD(board->display, hora, sizeof(hora));
         if (contador > 500){
-         MostrarCambiosPuntos(board -> display, 1, 1);
+            MostrarCambiosPuntos(board->display, 1, 1);
+        }
+        if (ObtebnerAlarmaReloj(reloj, hora, sizeof(hora))){
+            MostrarCambiosPuntos(board->display, 3, 3); 
         }
     }
 }
+
 /* === End of documentation ==================================================================== */
 
 /** @} End of module definition for doxygen */
